@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Orbitron:wght@400;700;900&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #1e1e2e;
+      --accent1: #7c3aed;
+      --accent2: #06b6d4;
+      --accent3: #f59e0b;
+      --accent4: #10b981;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --glow1: rgba(124,58,237,0.4);
+      --glow2: rgba(6,182,212,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 10% 0%, rgba(124,58,237,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 30% at 90% 100%, rgba(6,182,212,0.10) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    /* ── Header ── */
+    header {
+      padding: 60px 20px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .header-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      font-size: 11px;
+      font-family: 'Orbitron', monospace;
+      letter-spacing: 3px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(28px, 6vw, 64px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--accent1) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      line-height: 1.1;
+    }
+    header p {
+      color: var(--muted);
+      margin-top: 12px;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent2), transparent);
+    }
+
+    /* ── Stats row ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-4px); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    }
+    .stat-card.green::before { background: linear-gradient(90deg, var(--accent4), var(--accent2)); }
+    .stat-card.amber::before { background: linear-gradient(90deg, var(--accent3), #ef4444); }
+    .stat-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-card.green .stat-value { background: linear-gradient(135deg, #fff, var(--accent4)); -webkit-background-clip: text; background-clip: text; }
+    .stat-card.amber .stat-value { background: linear-gradient(135deg, #fff, var(--accent3)); -webkit-background-clip: text; background-clip: text; }
+    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 4px; }
+
+    /* ── Timeline ── */
+    .timeline-section { margin-bottom: 60px; }
+    .timeline { position: relative; padding-left: 0; }
+    .timeline-inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    /* vertical line */
+    .timeline-inner::before {
+      content: '';
+      position: absolute;
+      left: 70px;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--accent1), var(--accent2), var(--accent4));
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 16px 0;
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .timeline-item.visible { opacity: 1; transform: translateX(0); }
+
+    .timeline-age {
+      min-width: 60px;
+      text-align: right;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent3);
+      padding-top: 14px;
+    }
+
+    .timeline-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent1);
+      border: 3px solid var(--bg);
+      flex-shrink: 0;
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+      transition: box-shadow 0.3s;
+    }
+    .timeline-item:hover .timeline-dot {
+      box-shadow: 0 0 16px var(--glow1);
+    }
+    .timeline-dot.milestone {
+      background: linear-gradient(135deg, var(--accent3), #ef4444);
+      width: 24px; height: 24px;
+      margin-top: 10px;
+    }
+    .timeline-dot.management {
+      background: linear-gradient(135deg, var(--accent2), var(--accent4));
+    }
+
+    .timeline-card {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .timeline-item:hover .timeline-card {
+      border-color: var(--accent1);
+      transform: translateX(4px);
+    }
+    .timeline-role {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .timeline-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 4px;
+      font-family: 'Orbitron', monospace;
+      letter-spacing: 1px;
+    }
+    .tag-sales { background: rgba(124,58,237,0.2); color: var(--accent1); border: 1px solid rgba(124,58,237,0.3); }
+    .tag-mgmt  { background: rgba(6,182,212,0.15); color: var(--accent2); border: 1px solid rgba(6,182,212,0.3); }
+    .tag-exec  { background: rgba(245,158,11,0.15); color: var(--accent3); border: 1px solid rgba(245,158,11,0.3); }
+
+    /* ── Qualifications ── */
+    .quals-section { margin-bottom: 60px; }
+    .quals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+    }
+    .qual-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      cursor: default;
+    }
+    .qual-card.obtained {
+      border-color: rgba(16,185,129,0.3);
+    }
+    .qual-card.obtained:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent4);
+      box-shadow: 0 8px 32px rgba(16,185,129,0.2);
+    }
+    .qual-card.challenge {
+      border-color: rgba(245,158,11,0.3);
+      border-style: dashed;
+    }
+    .qual-card.challenge:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent3);
+      box-shadow: 0 8px 32px rgba(245,158,11,0.2);
+    }
+    .qual-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .qual-card.obtained::before { background: linear-gradient(90deg, var(--accent4), var(--accent2)); }
+    .qual-card.challenge::before { background: linear-gradient(90deg, var(--accent3), #ef4444); }
+
+    .qual-icon { font-size: 26px; margin-bottom: 10px; }
+    .qual-name {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text);
+    }
+    .qual-status {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      font-family: 'Orbitron', monospace;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+    .status-ok  { background: rgba(16,185,129,0.15); color: var(--accent4); }
+    .status-wip { background: rgba(245,158,11,0.15); color: var(--accent3); }
+
+    /* ── YouTube ── */
+    .yt-section { margin-bottom: 60px; }
+    .yt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .yt-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+    .yt-card:hover { transform: translateY(-4px); }
+    .yt-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, rgba(255,0,0,0.05), transparent 70%);
+      pointer-events: none;
+    }
+    .yt-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ff0000, #ff6b6b);
+    }
+    .yt-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-family: 'Orbitron', monospace;
+      margin-bottom: 8px;
+    }
+    .yt-value {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(26px, 5vw, 40px);
+      font-weight: 900;
+      color: #fff;
+    }
+    .yt-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Counter animation */
+    .counter { display: inline-block; }
+
+    /* ── Progress bar ── */
+    .progress-wrap { margin-top: 16px; }
+    .progress-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #ff0000, #ff6b6b);
+      width: 0;
+      transition: width 1.5s cubic-bezier(0.4,0,0.2,1) 0.5s;
+    }
+
+    /* ── Career bar chart ── */
+    .chart-section { margin-bottom: 60px; }
+    .chart-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .chart-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .bar-chart { display: flex; flex-direction: column; gap: 14px; }
+    .bar-row { display: flex; align-items: center; gap: 14px; }
+    .bar-label { width: 120px; font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 20px; background: var(--border); border-radius: 6px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      width: 0;
+      display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--accent4);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+      50%      { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .timeline-inner::before { left: 52px; }
+      .timeline-age { min-width: 44px; font-size: 11px; }
+      .bar-label { width: 80px; font-size: 10px; }
+      .quals-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s, transform 0.6s; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-badge">Personal Dashboard</div>
+  <h1>CAREER<br>PROFILE</h1>
+  <p>30年以上のキャリア × 6資格取得 × YouTube収益化達成</p>
+</header>
+
+<div class="container">
+
+  <!-- STATS ROW -->
+  <div class="stats-grid reveal">
+    <div class="stat-card">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-value"><span class="counter" data-target="30">0</span>年+</div>
+      <div class="stat-label">TOTAL CAREER</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📜</div>
+      <div class="stat-value"><span class="counter" data-target="6">0</span>資格</div>
+      <div class="stat-label">QUALIFICATIONS</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-icon">▶</div>
+      <div class="stat-value"><span class="counter" data-target="3300">0</span></div>
+      <div class="stat-label">YouTube SUBSCRIBERS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value">10万<span style="font-size:18px">超</span></div>
+      <div class="stat-label">YOUTUBE REVENUE</div>
+    </div>
+  </div>
+
+  <!-- CAREER TIMELINE -->
+  <div class="timeline-section">
+    <div class="section-title">Career Timeline</div>
+    <div class="timeline">
+      <div class="timeline-inner" id="timeline">
+
+        <div class="timeline-item">
+          <div class="timeline-age">22歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">新卒入社</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">年商200億円・東証二部上場メーカー</div>
+            <span class="timeline-tag tag-sales">NEW HIRE</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">22〜37歳</div>
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">営業担当</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">15年間の営業経験を積む</div>
+            <span class="timeline-tag tag-sales">SALES</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">38歳</div>
+          <div class="timeline-dot management"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">関西営業課長</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">初の管理職就任</div>
+            <span class="timeline-tag tag-mgmt">MANAGER</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">39歳</div>
+          <div class="timeline-dot management"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">名古屋営業課長</div>
+            <span class="timeline-tag tag-mgmt">MANAGER</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">40〜43歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">名古屋支店長</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">4年間の支店長経験</div>
+            <span class="timeline-tag tag-exec">BRANCH HEAD</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">44歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">関西支店長</div>
+            <span class="timeline-tag tag-exec">BRANCH HEAD</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">45〜46歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">東京支店長</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">3拠点の支店長を歴任</div>
+            <span class="timeline-tag tag-exec">BRANCH HEAD</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">47〜48歳</div>
+          <div class="timeline-dot management"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">管理本部担当部長</div>
+            <span class="timeline-tag tag-mgmt">GENERAL MANAGER</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">49歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">総務課長 / 取締役会事務局 / 経営企画部</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">3部門兼務</div>
+            <span class="timeline-tag tag-exec">EXECUTIVE STAFF</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">50歳</div>
+          <div class="timeline-dot management"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">営業企画部 部長代理</div>
+            <span class="timeline-tag tag-mgmt">DEPUTY DIRECTOR</span>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-age">51〜52歳</div>
+          <div class="timeline-dot milestone"></div>
+          <div class="timeline-card">
+            <div class="timeline-role">営業本部担当部長</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">営業本部の要職</div>
+            <span class="timeline-tag tag-exec">DIRECTOR</span>
+          </div>
+        </div>
+
+      </div><!-- timeline-inner -->
+    </div>
+  </div>
+
+  <!-- CAREER BAR CHART -->
+  <div class="chart-section reveal">
+    <div class="section-title">Career Phases</div>
+    <div class="chart-container">
+      <div class="chart-subtitle">役職レベル別在籍年数（推定）</div>
+      <div class="bar-chart" id="barChart">
+        <div class="bar-row">
+          <div class="bar-label">営業担当</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="background: linear-gradient(90deg,#7c3aed,#a78bfa);" data-width="75">15年</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">課長クラス</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="background: linear-gradient(90deg,#06b6d4,#67e8f9);" data-width="35">2年</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">支店長</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="background: linear-gradient(90deg,#f59e0b,#fcd34d);" data-width="55">7年</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">部長クラス</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="background: linear-gradient(90deg,#10b981,#6ee7b7);" data-width="60">7年</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">本部・兼務</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="background: linear-gradient(90deg,#ef4444,#fca5a5);" data-width="45">1年</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUALIFICATIONS -->
+  <div class="quals-section">
+    <div class="section-title">Qualifications</div>
+    <div class="quals-grid">
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">⚖️</div>
+        <div class="qual-name">行政書士</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">🏢</div>
+        <div class="qual-name">マンション管理士</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">🏠</div>
+        <div class="qual-name">宅建士</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">🔑</div>
+        <div class="qual-name">管理業務主任者</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">💳</div>
+        <div class="qual-name">貸金業務取扱主任者</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card obtained reveal">
+        <div class="qual-icon">🛡️</div>
+        <div class="qual-name">第一種衛生管理者</div>
+        <div><span class="qual-status status-ok">LICENSED</span></div>
+      </div>
+      <div class="qual-card challenge reveal">
+        <div class="qual-icon">⚡</div>
+        <div class="qual-name">社労士<br><span style="font-size:10px; color:var(--muted);">4回目受験予定</span></div>
+        <div><span class="qual-status status-wip">CHALLENGING</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="yt-section reveal">
+    <div class="section-title">YouTube Channel</div>
+    <div class="yt-grid">
+      <div class="yt-card">
+        <div class="yt-label">Subscribers</div>
+        <div class="yt-value"><span class="counter" data-target="3300">0</span></div>
+        <div class="yt-sub">登録者数</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>目標: 5,000人</span><span>66%</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="66"></div></div>
+        </div>
+      </div>
+      <div class="yt-card">
+        <div class="yt-label">Revenue</div>
+        <div class="yt-value">¥100,000<span style="font-size:16px">+</span></div>
+        <div class="yt-sub">累計収益</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>収益化達成</span><span>✔</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="100" style="background: linear-gradient(90deg,#10b981,#6ee7b7);"></div></div>
+        </div>
+      </div>
+      <div class="yt-card">
+        <div class="yt-label">Monetized</div>
+        <div class="yt-value" style="font-size:28px;">開始後<br>1年</div>
+        <div class="yt-sub">収益化達成までの期間</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>達成ステータス</span><span>COMPLETE</span></div>
+          <div class="progress-bar"><div class="progress-fill" data-width="100" style="background: linear-gradient(90deg,#f59e0b,#fcd34d);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <span class="pulse"></span>
+  Updated 2026 &nbsp;·&nbsp; Personal Dashboard &nbsp;·&nbsp; Built with passion
+</footer>
+
+<script>
+  // ── Intersection Observer for reveal ──
+  const revealEls = document.querySelectorAll('.reveal');
+  const timelineItems = document.querySelectorAll('.timeline-item');
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  revealEls.forEach(el => obs.observe(el));
+
+  // Timeline stagger
+  const timeObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const items = e.target.querySelectorAll('.timeline-item');
+        items.forEach((item, i) => {
+          setTimeout(() => item.classList.add('visible'), i * 80);
+        });
+        timeObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  const ti = document.getElementById('timeline');
+  if (ti) timeObs.observe(ti);
+
+  // ── Counter animation ──
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target, 10);
+    const duration = 1800;
+    const step = target / (duration / 16);
+    let current = 0;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = Math.floor(current).toLocaleString();
+      if (current >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  const counterObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.counter').forEach(animateCounter);
+        counterObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.stats-grid, .yt-grid').forEach(el => counterObs.observe(el));
+
+  // ── Bar chart ──
+  const barObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.bar-fill').forEach((bar, i) => {
+          setTimeout(() => {
+            bar.style.width = bar.dataset.width + '%';
+          }, i * 150);
+        });
+        barObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  const bc = document.getElementById('barChart');
+  if (bc) barObs.observe(bc);
+
+  // ── Progress bars ──
+  const progObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.progress-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+        progObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.yt-grid').forEach(el => progObs.observe(el));
+</script>
+</body>
+</html>
